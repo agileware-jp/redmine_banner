@@ -1,8 +1,7 @@
 # frozen_string_literal: true
 
-require 'redmine'
-require_relative 'app/models/global_banner'
-require 'banners/application_hooks'
+require File.dirname(__FILE__) + '/../../lib/redmine'
+require File.dirname(__FILE__) + '/lib/banners/banner_header_hooks'
 
 # NOTE: Keep error message for a while to support Redmine3.x users.
 def banner_version_message(original_message = nil)
