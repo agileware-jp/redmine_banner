@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require File.dirname(__FILE__) + '/../../lib/redmine'
+require File.dirname(__FILE__) + '/app/models/global_banner'
 require File.dirname(__FILE__) + '/lib/banners/banner_header_hooks'
 
 # NOTE: Keep error message for a while to support Redmine3.x users.
