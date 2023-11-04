@@ -1,104 +1,86 @@
-# Ruby CircleCI 2.0 configuration file
-#
-# Check https://circleci.com/docs/2.0/language-ruby/ for more details
-#
 version: 2.1
 
-general:
-  artifacts:
-    - coverage/${CIRCLE_PROJECT_REPONAME}_test/index.html
+orbs:
+  redmine-plugin: agileware-jp/redmine-plugin@3.1.0
+  plugin-test:
+    commands:
+      run-tests:
+        parameters:
+          plugin:
+            default: ''
+            description: Plugin name. If unspecified it will be the current repository's plugin.
+            type: string
+          redmine_root:
+            default: redmine
+            description: Directory where redmine is installed
+            type: string
+        steps:
+          - run:
+              name: Setup Database
+              command: 'RAILS_ENV=test bundle exec rake db:migrate redmine:plugins:migrate'
+              working_directory: << parameters.redmine_root >>
+          - run:
+              name: Set tested plugin
+              command: |
+                PLUGIN_NAME='<< parameters.plugin >>'
+                if [ -z $PLUGIN_NAME ]; then
+                  PLUGIN_NAME=$CIRCLE_PROJECT_REPONAME
+                fi
 
+                echo $PLUGIN_NAME >> .tested_plugin
+              working_directory: << parameters.redmine_root >>
+          - run:
+              command: >-
+                RAILS_ENV=test bundle exec rake redmine:plugins:test PLUGIN=`cat .tested_plugin`
+              working_directory: << parameters.redmine_root >>
 jobs:
-  build:
-    docker:
-      # specify the version you desire here (ruby 2.4.x)
-      - image: circleci/ruby:2.5-browsers-legacy
+  run-tests:
+    executor:
+      name: redmine-plugin/ruby-<< parameters.database >>
+      ruby_version: << parameters.ruby_version >>
+      db_version: << parameters.db_version >>
+    parameters:
+      database:
+        enum:
+          - mysql
+          - pg
+          - mariadb
+          - sqlite3
+        type: enum
+      redmine_version:
+        type: string
+      ruby_version:
+        type: string
+      db_version:
+        type: string
     steps:
       - checkout
-  test:
-    docker:
-      # specify the version you desire here
-      - image: circleci/ruby:2.5-browsers-legacy
-        environment:
-          RAILS_ENV: test
-          DB_HOST: 127.0.0.1
-          DRIVER: headless
-          TZ: /usr/share/zoneinfo/Asia/Tokyo
-      - image: mysql:5.7
-        command: mysqld --character-set-server=utf8mb4 --collation-server=utf8mb4_bin --innodb-large-prefix=true --innodb-file-format=Barracuda --sql-mode=""
-        environment:
-          MYSQL_USER: root
-          MYSQL_ALLOW_EMPTY_PASSWORD: yes
+      - redmine-plugin/download-redmine:
+          version: << parameters.redmine_version >>
+      - redmine-plugin/install-self
+      - redmine-plugin/generate-database_yml
+      - redmine-plugin/bundle-install
+      - redmine-plugin/migrate-without-plugins
+      - plugin-test/run-tests
 
-    working_directory: ~/repo
-    steps:
-      - checkout
-      - run:
-          name: ready for redmine
-          command: |
-            REDMINE_BRANCH=master sh script/circleci-setup.sh
-      - run: bundle install --path vendor/bundle --without postgresql rmagick && bundle update
-      - run: bundle exec rails g rspec:install
-      - run: bundle exec rake db:create RAILS_ENV=test
-      - run: bundle exec rake db:migrate RAILS_ENV=test
-      - run: bundle exec rake redmine:plugins:migrate RAILS_ENV=test
-      - run:
-          command: |
-            bundle exec rake ${CIRCLE_PROJECT_REPONAME}:test RAILS_ENV=test
-      - run:
-          command: |
-            bundle exec rake redmine:plugins:migrate NAME=${CIRCLE_PROJECT_REPONAME} \
-                    VERSION=0 RAILS_ENV=test
-      - run:
-          command: |
-            mkdir -p /tmp/coverage
-            cp -r coverage/${CIRCLE_PROJECT_REPONAME}_test /tmp/coverage/
-      - store_artifacts:
-          path: /tmp/coverage
-  deploy_heroku:
-    machine:
-      image: circleci/classic:edge
-    steps:
-      - checkout
-      - run:
-          name: 'Install Heroku CLI, if necessary'
-          command: |
-            curl https://cli-assets.heroku.com/install.sh | sh
-      - run:
-          name: 'Build Docker Image'
-          command: |
-            heroku -v
-            docker build --build-arg=COMMIT=${CIRCLE_SHA1} \
-                --build-arg=BRANCH=${CIRCLE_BRANCH} -t registry.heroku.com/${HEROKU_APP_NAME}/web .
-      - run:
-          name: 'Release Docker Image'
-          command: |
-            docker login --username=_ --password=$HEROKU_AUTH_TOKEN registry.heroku.com
-            docker push registry.heroku.com/${HEROKU_APP_NAME}/web
-            #heroku container:push web --app ${HEROKU_APP_NAME}
-            heroku container:release web --app ${HEROKU_APP_NAME}
+default_context: &default_context
+  context:
+    - lychee-ci-environment
 
 workflows:
-  build_test_push:
+  run-tests-workflow:
     jobs:
-      - build:
-          filters:
-            branches:
-              ignore:
-                - /ignore-build-.*/
-      - test:
-          requires:
-            - build
-          filters:
-            branches:
-              ignore:
-                - /v0.1.x-support-Redmine3.*/
-      - deploy_heroku:
-          requires:
-            - build
-          filters:
-            branches:
-              ignore:
-                - master
-
-
+        - run-tests:
+            <<: *default_context
+            name: test on supported maximum versions with PostgreSQL
+            redmine_version: $REDMINE_MAX_VERSION
+            ruby_version: $RUBY_MAX_VERSION
+            database: pg
+            db_version: $POSTGRES_VERSION
+        - run-tests:
+            <<: *default_context
+            name: test on supported minimum versions with MySQL
+            redmine_version: '4.2.9'
+            ruby_version: $RUBY_MIN_VERSION
+            database: mysql
+            db_version: $MYSQL_VERSION
