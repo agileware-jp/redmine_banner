@@ -24,6 +24,7 @@ class BannerControllerTest < Redmine::ControllerTest
                  related_link: nil
                }
     end
+    Setting.text_formatting = 'textile'
     @settings = Setting['plugin_redmine_banner']
 
     @project = Project.find(1)
