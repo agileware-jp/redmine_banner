@@ -29,6 +29,9 @@ SimpleCov.start do
   end
 end
 
+
+require 'minitest/autorun'
+require 'minitest/unit'
 require File.expand_path(File.dirname(__FILE__) + '/../../../test/test_helper')
 
 # TODO: Workaround: Fixtures_path could not be set temporary, so this has to do it
