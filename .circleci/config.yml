@@ -1,7 +1,7 @@
 version: 2.1
 
 orbs:
-  redmine-plugin: agileware-jp/redmine-plugin@3.5.0
+  redmine-plugin: agileware-jp/redmine-plugin@3.7.0
   plugin-test:
     commands:
       run-tests:
@@ -34,6 +34,33 @@ orbs:
                 RAILS_ENV=test bundle exec rake redmine:plugins:test PLUGIN=`cat .tested_plugin`
               working_directory: << parameters.redmine_root >>
 jobs:
+  run-tests-git-url:
+    parameters:
+      redmine_git_url:
+        type: string
+      redmine_version:
+        type: string
+      ruby_version:
+        type: string
+      db:
+        type: enum
+        enum: ['mysql', 'pg']
+      db_version:
+        type: string
+    executor:
+      name: redmine-plugin/ruby-<< parameters.db >>
+      ruby_version: << parameters.ruby_version >>
+      db_version: << parameters.db_version >>
+    steps:
+      - checkout
+      - redmine-plugin/download-redmine-git-url:
+          git_url: << parameters.redmine_git_url >>
+          version: << parameters.redmine_version >>
+      - redmine-plugin/install-self
+      - redmine-plugin/generate-database_yml
+      - redmine-plugin/bundle-install
+      - redmine-plugin/migrate-without-plugins
+      - plugin-test/run-tests
   run-tests:
     executor:
       name: redmine-plugin/ruby-<< parameters.database >>
@@ -70,17 +97,25 @@ default_context: &default_context
 workflows:
   run-tests-workflow:
     jobs:
-        - run-tests:
-            <<: *default_context
-            name: test on supported maximum versions with PostgreSQL
-            redmine_version: $REDMINE_MAX_VERSION
-            ruby_version: $RUBY_MAX_VERSION
-            database: pg
-            db_version: $POSTGRES_VERSION
-        - run-tests:
-            <<: *default_context
-            name: test on supported minimum versions with MySQL
-            redmine_version: '4.2.9'
-            ruby_version: $RUBY_MIN_VERSION
-            database: mysql
-            db_version: $MYSQL_VERSION
+      - run-tests-git-url:
+          !!merge <<: *default_context
+          name: test on Redmine git with PostgreSQL
+          redmine_git_url: $REDMINE_GIT_URL
+          redmine_version: $REDMINE_GIT_REVISION
+          ruby_version: $REDMINE_GIT_RUBY_VERSION
+          db: pg
+          db_version: $POSTGRES_VERSION
+      - run-tests:
+          <<: *default_context
+          name: test on supported maximum versions with PostgreSQL
+          redmine_version: $REDMINE_MAX_VERSION
+          ruby_version: $RUBY_MAX_VERSION
+          database: pg
+          db_version: $POSTGRES_VERSION
+      - run-tests:
+          <<: *default_context
+          name: test on supported minimum versions with MySQL
+          redmine_version: '4.2.9'
+          ruby_version: $RUBY_MIN_VERSION
+          database: mysql
+          db_version: $MYSQL_VERSION

@@ -13,6 +13,12 @@ rescue LoadError => e
   exit
 end
 
+unless Date.method_defined?(:to_fs)
+  class Date
+    alias_method(:to_fs, :to_s)
+  end
+end
+
 if ENV['JENKINS'] == 'true'
   SimpleCov.formatter = SimpleCov::Formatter::RcovFormatter
   true
