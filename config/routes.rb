@@ -15,7 +15,7 @@ Rails.application.routes.draw do
     end
   end
 
-  resources :banner, only: %i[preview off], concerns: [:previewable] do
+  resources :banner, only: [], concerns: [:previewable] do
     post 'off', on: :collection
     get 'off', on: :collection
   end
@@ -27,7 +27,7 @@ Rails.application.routes.draw do
 
   namespace 'banners' do
     namespace 'api' do
-      resource :global_banner, only: %i[register_banner] do
+      resource :global_banner, only: [] do
         put '/', to: 'global_banner#register_banner', on: :member
         get '/', to: 'global_banner#show', on: :member
       end
