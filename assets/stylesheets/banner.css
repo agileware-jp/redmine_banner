@@ -60,6 +60,9 @@ span.banner_alert {
 
 #admin-menu a.redmine-banner {
   background-image: url("../images/alert-msg.png");
+  background-position: 0% 50%;
+  background-repeat: no-repeat;
+  padding-left: 20px;
 }
 
 span.use_timer {
