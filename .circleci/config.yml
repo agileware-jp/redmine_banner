@@ -132,7 +132,7 @@ workflows:
       - run-tests:
           <<: *default_context
           name: test on supported minimum versions with MySQL
-          redmine_version: '4.2.9'
+          redmine_version: $REDMINE_MIN_VERSION
           ruby_version: $RUBY_MIN_VERSION
           database: mysql
           db_version: $MYSQL_VERSION

@@ -1,12 +1,13 @@
 source 'https://rubygems.org'
 group :test do
   gem 'simplecov-rcov', :require => false
-  gem 'pry-rails'
-  gem 'pry-byebug'
 end
 
 group :development do
   gem 'bullet'
+end
+
+group :development, :test do
   gem 'pry-rails'
   gem 'pry-byebug'
 end
