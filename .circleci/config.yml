@@ -59,6 +59,14 @@ jobs:
           version: << parameters.redmine_version >>
       - redmine-plugin/install-self
       - redmine-plugin/generate-database_yml
+      - run:
+          # Redmine 6.1 pins commonmarker ~> 2.3.0, which requires RubyGems < 4
+          name: Downgrade RubyGems for commonmarker < 2.6
+          command: |
+            if grep -q "commonmarker.*2\.3\.0" redmine/Gemfile; then
+              sudo gem update --system 3.7.2
+              gem --version | grep -q '^3\.' # fail loudly if the downgrade did not stick
+            fi
       - redmine-plugin/bundle-install
       - redmine-plugin/migrate-without-plugins
       - plugin-test/run-tests
@@ -87,6 +95,14 @@ jobs:
           version: << parameters.redmine_version >>
       - redmine-plugin/install-self
       - redmine-plugin/generate-database_yml
+      - run:
+          # Redmine 6.1 pins commonmarker ~> 2.3.0, which requires RubyGems < 4
+          name: Downgrade RubyGems for commonmarker < 2.6
+          command: |
+            if grep -q "commonmarker.*2\.3\.0" redmine/Gemfile; then
+              sudo gem update --system 3.7.2
+              gem --version | grep -q '^3\.' # fail loudly if the downgrade did not stick
+            fi
       - redmine-plugin/bundle-install
       - redmine-plugin/migrate-without-plugins
       - plugin-test/run-tests
