@@ -1,7 +1,8 @@
 version: 2.1
 
 orbs:
-  redmine-plugin: agileware-jp/redmine-plugin@3.7.0
+  bamboo: agileware-jp/bamboo@1.1.1
+  redmine-plugin: agileware-jp/redmine-plugin@4.0.2
   plugin-test:
     commands:
       run-tests:
