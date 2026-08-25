@@ -7,7 +7,7 @@ Rails.application.routes.draw do
   end
 
   resources :projects do
-    resources :banner, only: %i[show] do
+    resource :banner, only: :none do
       get '/', to: 'banner#show', on: :collection
       post '/', to: 'banner#edit', on: :collection
       post 'project_banner_off', on: :collection
@@ -20,7 +20,7 @@ Rails.application.routes.draw do
     get 'off', on: :collection
   end
 
-  resources :global_banner, only: %i[show] do
+  resources :global_banner, only: :none do
     get '/', to: 'global_banner#show', on: :collection
     post '/', to: 'global_banner#update', on: :collection
   end
