@@ -4,10 +4,10 @@
 </div>
   <div class="banner_edit">
     <%= link_to l(:button_edit),
-  { controller: 'global_banner', action: 'show' },
+  { controller: '/global_banner', action: 'show' },
   { class: 'icon banner-icon-edit', title: l(:button_edit)} if User.current.admin? %>
 <%= link_to  l(:button_off),
-  { controller: 'banner', action: 'off', moderate: 'yes', remote: true },
+  { controller: '/banner', action: 'off', moderate: 'yes', remote: true },
   { class: 'icon banner-icon-off', title: l(:banner_off)} if User.current.logged? %>
   </div>
 
