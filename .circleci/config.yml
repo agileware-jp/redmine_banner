@@ -131,6 +131,13 @@ workflows:
           db_version: $POSTGRES_VERSION
       - run-tests:
           <<: *default_context
+          name: test on supported middle versions with PostgreSQL
+          redmine_version: $REDMINE_MID_VERSION
+          ruby_version: $RUBY_MID_VERSION
+          database: pg
+          db_version: $POSTGRES_VERSION
+      - run-tests:
+          <<: *default_context
           name: test on supported minimum versions with MySQL
           redmine_version: $REDMINE_MIN_VERSION
           ruby_version: $RUBY_MIN_VERSION
